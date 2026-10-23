@@ -3,18 +3,19 @@
 J. B. van den Berg, M. Breden, O. Hénot, J.-P. Lessard, J. D. Mireles James.
 
 Lessons, applications and exercises as [Pluto](https://plutojl.org) notebooks,
-using [RadiiPolynomial.jl](https://github.com/OlivierHnt/RadiiPolynomial.jl).
+using [IntervalArithmetic.jl](https://github.com/JuliaIntervals/IntervalArithmetic.jl)
+and [RadiiPolynomial.jl](https://github.com/OlivierHnt/RadiiPolynomial.jl).
 
 Read online: https://capsule-math.github.io/Computer-assisted-proofs-in-nonlinear-analysis/
 
 ## Installation
 
 1. Install Julia with [juliaup](https://julialang.org/downloads) (Julia 1.11 or later).
-2. Install Pluto, once:
+2. Install Pluto:
    ```
    julia -e 'using Pkg; Pkg.add("Pluto")'
    ```
-3. Get the course and its packages (one environment for every notebook):
+3. Get the course and its packages:
    ```
    git clone https://github.com/capsule-math/Computer-assisted-proofs-in-nonlinear-analysis
    cd Computer-assisted-proofs-in-nonlinear-analysis
@@ -34,8 +35,8 @@ Each notebook starts by activating the course environment (`Project.toml`,
 Project.toml, Manifest.toml   the shared environment
 N-topic/                      one folder per module, in order
   README.md                   its title (first heading)
-  lesson.jl                   the theory
-  application.jl              (optional) a worked example
+  lesson.jl                   theory
+  application.jl              worked examples
   exercise-K.jl               exercises
 build.jl                      writes the course page _site/index.html
 ```
@@ -49,7 +50,7 @@ create `N-topic/README.md`. The course page picks both up on the next push.
 
 `.github/workflows/site.yml` runs every notebook, exports them to HTML, builds
 the course page and publishes it with GitHub Pages (on push to `main`; also
-monthly against the newest allowed package versions, as an alarm).
+monthly against the newest allowed package versions).
 
 To preview locally:
 ```
@@ -57,7 +58,3 @@ julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("PlutoSliderServer"); usin
 julia build.jl
 ```
 then open `_site/index.html`.
-
-## License
-
-MIT, see `LICENSE.md`.
