@@ -1,0 +1,83 @@
+name: Site
+
+# Runs every notebook as a script, exports them to HTML with PlutoSliderServer,
+# writes the course page (build.jl) and publishes _site/ with GitHub Pages.
+#
+#   push / pull request / by hand   the pinned environment (Manifest.toml)
+#   monthly                         newest versions [compat] allows (Manifest
+#                                   ignored); nothing is deployed, a failure is
+#                                   the alarm
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '23 4 1 * *'      # 04:23 UTC on the 1st of each month
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GKSwstype: '100'          # Plots without a display
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v2
+
+      - name: Instantiate the course environment
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then rm -f Manifest.toml; fi
+          julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.status()'
+
+      - name: Run every notebook
+        run: |
+          status=0
+          for nb in [0-9]*-*/*.jl; do
+            head -n1 "$nb" | grep -q 'A Pluto.jl notebook' || continue
+            echo "::group::$nb"
+            if julia --project=. "$nb"; then echo "pass $nb"; else echo "fail $nb"; status=1; fi
+            echo "::endgroup::"
+          done
+          exit $status
+
+      - name: Export notebooks
+        if: github.event_name != 'schedule'
+        run: |
+          julia -e '
+            using Pkg; Pkg.activate(temp = true); Pkg.add("PlutoSliderServer")
+            using PlutoSliderServer
+            export_directory("."; Export_output_dir = "_site", Export_create_index = false)'
+
+      - name: Write the course page
+        if: github.event_name != 'schedule'
+        run: julia build.jl
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'schedule'
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,1 @@
+# Invariant manifolds of equilibria
